@@ -1,0 +1,40 @@
+version: '3'
+
+services:  
+  eureka-sv:
+    build: eureka-sv
+    mem_limit: 512m
+    ports:
+      - "8761:8761"
+    networks:
+      - 'productocarritoventa-network'
+  producto_microservicios:
+    build: producto-service
+    mem_limit: 512m
+    ports:
+      - "9004:9004"
+    environment:
+      DB_URL: jdbc:mysql://producto_db:3306/producto_micro?useSSL=false&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true&serverTimezone=UTC
+      DB_USER_NAME: root
+      DB_PASSWORD: pulento1234
+    restart: always
+    depends_on:
+      producto_db:
+          condition: service_healthy
+  producto_db:
+    image: mysql:8.0.31
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: pulento1234
+      MYSQL_PASSWORD: pulento1234
+      MYSQL_DATABASE: producto_micro      
+    restart: always
+    healthcheck:
+      test: ["CMD","mysqladmin","ping","-h","localhost"]
+      timeout: 10s
+      retries: 10
+    networks:
+      - 'productocarritoventa-network'
+networks:
+  productocarritoventa-network:
